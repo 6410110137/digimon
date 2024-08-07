@@ -9,7 +9,7 @@ def create_app():
 
     models.init_db(settings)
 
-    routes.init_router(app)
+    routes.init_routers(app)
 
     @app.on_event("startup")
     async def on_startup():

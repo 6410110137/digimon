@@ -36,5 +36,5 @@ class MerchantList(BaseModel):
     size_per_page: int
 
 if TYPE_CHECKING:
-    from models.item_models import DBItem
-    from models.wallet_model import DBWallet
+    from .item_models import DBItem
+    from .wallet_model import DBWallet

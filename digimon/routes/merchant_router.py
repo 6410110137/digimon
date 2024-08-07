@@ -1,20 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
-from models.merchant_model import CreatedMerchant, DBMerchant, Merchant, MerchantList, UpdatedMerchant
-from models import engine
+from ..models.merchant_model import CreatedMerchant, DBMerchant, Merchant, MerchantList, UpdatedMerchant
 from contextlib import contextmanager
 from typing import Optional, Annotated
 from .. import models
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/merchants", tags=["merchant"])
-
-@contextmanager
-async def get_db_merchant(session: AsyncSession, merchant_id: int):
-    db_merchant = await session.get(DBMerchant, merchant_id)
-    if db_merchant is None:
-        raise HTTPException(status_code=404, detail="Merchant not found")
-    return db_merchant
 
 @router.post("")
 async def create_merchant(merchant: CreatedMerchant, session: Annotated[AsyncSession, Depends(models.get_session)]):
@@ -32,11 +24,14 @@ async def get_merchants( session: Annotated[AsyncSession, Depends(models.get_ses
 
 @router.get("/{merchant_id}")
 async def get_merchant(merchant_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]):
-    return Merchant.from_orm(get_db_merchant(session, merchant_id))
+    db_merchant = await session.get(DBMerchant, merchant_id)
+    if not db_merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    return Merchant.from_orm(db_merchant)
 
 @router.put("/{merchant_id}")
 async def update_merchant(merchant_id: int, merchant: UpdatedMerchant,session: Annotated[AsyncSession, Depends(models.get_session)]):
-    db_merchant = get_db_merchant(session, merchant_id)
+    db_merchant = await session.get(DBMerchant, merchant_id)
     for key, value in merchant.dict(exclude_unset=True).items():
         setattr(db_merchant, key, value)
     session.add(db_merchant)
@@ -46,7 +41,7 @@ async def update_merchant(merchant_id: int, merchant: UpdatedMerchant,session: A
 
 @router.delete("/{merchant_id}")
 async def delete_merchant(merchant_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]):
-    db_merchant = get_db_merchant(session, merchant_id)
+    db_merchant = await session.get(DBMerchant, merchant_id)
     await session.delete(db_merchant)
     await session.commit()
     return {"message": "Merchant deleted successfully"}
