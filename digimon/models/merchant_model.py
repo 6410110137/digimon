@@ -1,6 +1,6 @@
 from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel, create_engine, Session, select, Relationship
 
 class BaseMerchant(BaseModel):
     model_config = ConfigDict(from_attributes=True)
