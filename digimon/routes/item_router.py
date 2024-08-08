@@ -1,18 +1,21 @@
-from fastapi import APIRouter, HTTPException, Depends
-from sqlmodel import Session, select
-from typing import Optional, Annotated
+from fastapi import APIRouter, HTTPException, Depends , Query
+from sqlmodel import Session, select , func 
+from typing import Optional, Annotated 
 from .. import models
+from .. import deps
+import math
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from ..models.item_models import CreatedItem, DBItem, Item, ItemList, UpdatedItem
 from contextlib import contextmanager
 
 router = APIRouter(prefix="/items", tags=["item"])
+SIZE_PER_PAGE = 50
 
 @router.post("/{merchant_id}")
 async def create_item(
-    merchant_id: int,
     item: CreatedItem,
+   #current_user: Annotated[models.users, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> Item | None:
     data = item.dict()
@@ -25,12 +28,26 @@ async def create_item(
 
 @router.get("")
 async def get_items(
-    session: Annotated[AsyncSession, Depends(models.get_session)]
+    session: Annotated[AsyncSession, Depends(models.get_session)],
+    page: int = 1,
+    size_per_page: int = SIZE_PER_PAGE,
 ) -> ItemList:
-    result = await session.exec(select(DBItem))
+    result = await session.exec(
+        select(DBItem).offset((page - 1) * size_per_page).limit(size_per_page)
+    )
     items = result.all()
+
+    page_count = int(
+        math.ceil(
+            (await session.exec(select(func.count(DBItem.id)))).first()
+            / size_per_page
+        )
+    )
+
+    print("page_count", page_count)
+    print("items", items)
     return ItemList.from_orm(
-        dict(items=items, page_size=0, page=0, size_per_page=0)
+        dict(items=items, page_count=page_count, page=page, size_per_page=size_per_page)
     )
 
 
@@ -49,6 +66,7 @@ async def get_item(
 async def update_item(
     item_id: int,
     item: UpdatedItem,
+    #current_user: Annotated[models.users, Depends(deps.get_current_user)],
     session: Annotated[AsyncSession, Depends(models.get_session)],
 ) -> Item:
     print("update_item", item)
@@ -63,7 +81,9 @@ async def update_item(
 
 @router.delete("/{item_id}")
 async def delete_item(
-    item_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]
+    item_id: int,
+    #current_user: Annotated[models.users, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]
 ) -> dict:
     db_item = await session.get(DBItem, item_id)
     await session.delete(db_item)

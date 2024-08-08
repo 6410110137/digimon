@@ -4,13 +4,19 @@ from ..models.merchant_model import CreatedMerchant, DBMerchant, Merchant, Merch
 from contextlib import contextmanager
 from typing import Optional, Annotated
 from .. import models
+from .. import deps
+from ..models import users
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/merchants", tags=["merchant"])
 
 @router.post("")
-async def create_merchant(merchant: CreatedMerchant, session: Annotated[AsyncSession, Depends(models.get_session)]):
-    db_merchant = DBMerchant(**merchant.dict())
+async def create_merchant(
+    merchant: CreatedMerchant, 
+    current_user: Annotated[users, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]):
+    db_merchant = DBMerchant.parse_obj(merchant)
+    db_merchant.user = current_user
     session.add(db_merchant)
     await session.commit()
     await session.refresh(db_merchant)
@@ -30,7 +36,10 @@ async def get_merchant(merchant_id: int, session: Annotated[AsyncSession, Depend
     return Merchant.from_orm(db_merchant)
 
 @router.put("/{merchant_id}")
-async def update_merchant(merchant_id: int, merchant: UpdatedMerchant,session: Annotated[AsyncSession, Depends(models.get_session)]):
+async def update_merchant(
+    merchant_id: int, merchant: UpdatedMerchant,
+    # current_user: Annotated[models.users, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]):
     db_merchant = await session.get(DBMerchant, merchant_id)
     for key, value in merchant.dict(exclude_unset=True).items():
         setattr(db_merchant, key, value)
@@ -40,7 +49,10 @@ async def update_merchant(merchant_id: int, merchant: UpdatedMerchant,session: A
     return Merchant.from_orm(db_merchant)
 
 @router.delete("/{merchant_id}")
-async def delete_merchant(merchant_id: int, session: Annotated[AsyncSession, Depends(models.get_session)]):
+async def delete_merchant(
+    merchant_id: int, 
+    # current_user: Annotated[models.users, Depends(deps.get_current_user)],
+    session: Annotated[AsyncSession, Depends(models.get_session)]):
     db_merchant = await session.get(DBMerchant, merchant_id)
     await session.delete(db_merchant)
     await session.commit()

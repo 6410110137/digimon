@@ -1,6 +1,7 @@
 from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 from sqlmodel import Field, SQLModel, create_engine, Session, select, Relationship
+from . import users
 
 if TYPE_CHECKING:
     from .merchant_model import DBMerchant
@@ -13,6 +14,8 @@ class BaseItem(BaseModel):
     description: str | None = None
     price: float = 0.12
     tax: float | None = None
+    user_id: int | None = 1
+    merchant_id: int | None
 
 
 class CreatedItem(BaseItem):
@@ -35,9 +38,12 @@ class DBItem(Item, SQLModel, table=True):
 
     transactions: list["DBTransaction"] = Relationship(back_populates="item")
 
+    user_id: int = Field(default=None, foreign_key="users.id")
+    user: users.DBUser | None = Relationship()
+
 class ItemList(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     items: list[Item]
     page: int
-    page_size: int
+    page_count: int
     size_per_page: int
