@@ -4,12 +4,12 @@ from sqlmodel import Field, Relationship, SQLModel
 
 from .item_models import DBItem
 from .wallet_model import DBWallet
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
 
 
 class BaseTransaction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
-    balance: float
     quantity: int = 1
 
 
@@ -40,3 +40,4 @@ class TransactionList(BaseModel):
     page: int
     page_size: int
     size_per_page: int
+

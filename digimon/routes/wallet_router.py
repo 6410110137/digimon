@@ -5,6 +5,11 @@ from contextlib import contextmanager
 from typing import Optional, Annotated
 from .. import models
 from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from ..models.wallet_model import CreatedWallet, DBWallet, UpdatedWallet, Wallet
+from datetime import datetime
+from ..models.users import User
 
 router = APIRouter(prefix="/wallets", tags=["wallet"])
 
@@ -40,3 +45,4 @@ async def delete_wallet(wallet_id: int, session: Annotated[AsyncSession, Depends
     await session.delete(db_wallet)
     await session.commit()
     return {"message": "Wallet deleted successfully"}
+
