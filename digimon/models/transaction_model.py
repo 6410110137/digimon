@@ -27,6 +27,7 @@ class Transaction(BaseTransaction):
 class DBTransaction(Transaction, SQLModel, table=True):
     __tablename__ = "transactions"
     id: Optional[int] = Field(default=None, primary_key=True)
+    balance: float = Field(default=0.0)  # Add this line
 
     wallet_id: Optional[int] = Field(default=None, foreign_key="wallets.id")
     wallet: Optional[DBWallet] = Relationship(back_populates="transactions")
@@ -40,4 +41,3 @@ class TransactionList(BaseModel):
     page: int
     page_size: int
     size_per_page: int
-

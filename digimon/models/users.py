@@ -1,8 +1,7 @@
 import datetime
-
 import pydantic
 from pydantic import BaseModel, EmailStr, ConfigDict
-from sqlmodel import SQLModel, Field
+from sqlmodel import  SQLModel, Field
 
 from passlib.context import CryptContext
 
