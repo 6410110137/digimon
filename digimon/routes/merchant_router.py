@@ -20,7 +20,8 @@ async def create_merchant(
     session.add(db_merchant)
     await session.commit()
     await session.refresh(db_merchant)
-    return Merchant.from_orm(db_merchant)
+    return Merchant.model_validate(db_merchant)
+
 
 @router.get("")
 async def get_merchants( session: Annotated[AsyncSession, Depends(models.get_session)], page: int = 1, page_size: int = 10,):
@@ -33,7 +34,8 @@ async def get_merchant(merchant_id: int, session: Annotated[AsyncSession, Depend
     db_merchant = await session.get(DBMerchant, merchant_id)
     if not db_merchant:
         raise HTTPException(status_code=404, detail="Merchant not found")
-    return Merchant.from_orm(db_merchant)
+    return Merchant.model_validate(db_merchant)
+
 
 @router.put("/{merchant_id}")
 async def update_merchant(
@@ -46,7 +48,8 @@ async def update_merchant(
     session.add(db_merchant)
     await session.commit()
     await session.refresh(db_merchant)
-    return Merchant.from_orm(db_merchant)
+    return Merchant.model_validate(db_merchant)
+
 
 @router.delete("/{merchant_id}")
 async def delete_merchant(
