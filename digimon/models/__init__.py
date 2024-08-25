@@ -1,8 +1,16 @@
-from typing import Optional
+from typing import AsyncIterator
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from sqlalchemy.orm import sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
+
+
+from .item_models import *
+from .users import *
+from .exchange_model import *
+from .transaction_model import *
+from .wallet_model import *
+from .merchant_model import *
 
 connect_args = {}
 
@@ -20,13 +28,13 @@ def init_db(settings):
     )
 
 
-async def create_all():
+async def recreate_table():
     async with engine.begin() as conn:
         #await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def get_session() -> AsyncSession: # type: ignore
+async def get_session() -> AsyncIterator[AsyncSession]: 
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
